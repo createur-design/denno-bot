@@ -1,166 +1,79 @@
-import { urlLink, dialog } from "./answers.js";
-
-const apiKey = ""; // API KEY
-const latLon = [,]; // GEOLOC
-const url = `https://api.openweathermap.org/data/2.5/weather?lat=${latLon[0]}&lon=${latLon[1]}&appid=${apiKey}&lang=fr&units=metric`;
-const inputDialog = document.getElementById("inputAnswer");
-const dataList = document.getElementById("choice");
-const response = document.getElementById("responseBot");
-const answer = document.getElementById("answer");
-const dennoDialog = document.getElementById("dennoDialog");
-const formFAQ = document.getElementById("formFAQ");
-
-const dennoBot = document.getElementById("dennoBot");
-const closeBot = document.getElementById("closeBot");
-const btnDenno = document.getElementById("btnDenno");
-const dennoClose = document.getElementById("dennoClose");
-
-if (btnDenno) {
-  closeBot.addEventListener("click", () => {
-    dennoBot.classList.add("hide");
-    btnDenno.classList.remove("hide");
-  });
-
-  btnDenno.addEventListener("click", function () {
-    this.classList.add("hide");
-    dennoBot.classList.remove("hide");
-    inputAnswer.focus();
-  });
-
-  dennoClose.addEventListener("click", () => {
-    dennoBot.classList.add("hide");
-    btnDenno.classList.remove("hide");
-  });
-}
-
-const getWeather = async () => {
-  const result = await fetch(url);
-  const data = await result.json();
-  const temp = Math.round(data.main.temp).toString();
-  const desc = data.weather[0].description;
-  const humidity = data.main.humidity;
-  const windSpeed = Math.round(data.wind.speed);
-  const response = {
-    response: `Il fait actuellment <b>${temp}°,</b><br>${desc}.<br>Humidité : <b>${humidity}%</b><br>Vent : <b>${windSpeed}km/h</b>`,
-    picture: `http://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`,
-  };
-  return response;
-  // dialog.push({
-  //   id: dialog.length + 1,
-  //   answer: "Quel temps fait-il à Dennlys Parc ?",
-  //   response: `Il fait actuellment <b>${temp}°,</b><br>${desc}.<br>Humidité : <b>${humidity}%</b><br>Vent : <b>${windSpeed}km/h</b>`,
-  //   picture: `http://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`,
-  //   keywords: ["météo", "meteo", "temps"],
-  // });
-  // return data;
-};
-dialog.push({
-  id: dialog.length + 1,
-  answer: "Quel temps fait-il à Dennlys Parc ?",
-  response: getWeather,
-  keywords: ["météo", "meteo", "temps"],
-});
-// getWeather();
-
-// const clearDom = () => {
-//   answer.innerHTML = "";
-//   response.innerHTML = "";
-//   dataList.innerHTML = "";
-//   response.classList.add("hide");
-//   answer.classList.add("hide");
-//   dennoDialog.classList.add("hide");
-// };
-
-if (formFAQ) {
-  formFAQ.addEventListener("submit", (e) => {
-    e.preventDefault();
-  });
-}
-
-inputDialog.addEventListener("input", (e) => {
-  //   clearDom();
-  dataList.innerHTML = "";
-  const input = e.target.value.toLowerCase().split(" ");
-  const filteredDialog = dialog.filter((row) => {
-    return row.keywords.some((keywords) =>
-      input.includes(keywords.toLowerCase())
-    );
-  });
-  if (input.length > 5 && filteredDialog.length === 0) {
-    const message = [
-      {
-        id: dialog.length + 1,
-        answer: `${e.target.value}...`,
-        response: `Je ne trouve pas de réponse à votre question, soyez plus précis ou veuillez nous contacter via le formulaire de contact.`,
-        link: `<a href="${urlLink}contact.php">contactez-nous</a>`,
-        // picture: `https://content.quizzclub.com/trivia/2020-03/quelle-question-n-a-pas-besoin-de-reponse.jpg`,
-      },
-    ];
-    inputDialog.value = "";
-    answer.innerHTML = message[0].answer;
-    typeWriter(message, response);
-  }
-  if (filteredDialog.length > 0) {
-    console.log(
-      `il y a ${filteredDialog.length} ${
-        filteredDialog.length > 1 ? "propositions" : "proposition"
-      }`
-    );
-    filteredDialog.forEach((row) => {
-      dataList.innerHTML += `<div><div class="suggestion answerType bgYellow" data-id="${row.id}"><small>${row.answer}</small></div></div>`;
-      const allBtnAnswer = document.querySelectorAll(".suggestion");
-      allBtnAnswer.forEach((btn) => {
-        btn.addEventListener("click", function () {
-          const id = Number(this.dataset.id);
-          const result = dialog.filter((row) => row.id === id);
-          dataList.innerHTML = "";
-          answer.innerHTML = result[0].answer;
-          typeWriter(result, response);
-        });
-      });
-    });
-  }
-});
-
-async function typeWriter(row, cible) {
-  let string = row[0].response;
-
-  if (typeof string === "function") {
-    const result = await eval(string());
-    string = result.response;
-    if (result.picture) {
-      row[0].picture = result.picture;
-    }
-  }
-
-  inputDialog.disabled = true;
-  let count = 0;
-  response.classList.remove("hide");
-  answer.classList.remove("hide");
-  dennoDialog.classList.remove("hide");
-  const timer = setInterval(() => {
-    /* permet d'interpreter les tags HTML */
-    const char = string[count];
-    if (char === "<") {
-      count = string.indexOf(">", count); // skip to greater-than
-    }
-    cible.innerHTML = string.slice(0, count);
-
-    if (++count === string.length + 1) {
-      clearInterval(timer);
-      inputDialog.disabled = false;
-      inputDialog.focus();
-      if (row && row[0].picture) {
-        cible.innerHTML += `<div><img src="${row[0].picture}"/></div>`;
-      }
-      if (row && row[0].link) {
-        cible.innerHTML += `<div>${row[0].link}</div>`;
-      }
-      const date = new Date();
-      const frenchDateTime = `${date.toLocaleDateString(
-        "fr-FR"
-      )} ${date.toLocaleTimeString("fr-FR")}`;
-      cible.innerHTML += `<p class="text-right"><small>${frenchDateTime}</small></p>`;
+function typeWriter(e, t, n) {
+  inputDialog.disabled = !0;
+  let i = 0;
+  response.classList.remove("hide"), answer.classList.remove("hide");
+  const a = setInterval(() => {
+    const s = e[i];
+    if (
+      ("<" === s && (i = e.indexOf(">", i)),
+      (t.innerHTML = e.slice(0, i)),
+      ++i === e.length + 1)
+    ) {
+      clearInterval(a),
+        (inputDialog.disabled = !1),
+        inputDialog.focus(),
+        n[0].picture &&
+          (t.innerHTML += `<div><img src="${n[0].picture}"/></div>`),
+        n[0].link && (t.innerHTML += `<div>${n[0].link}</div>`);
+      const e = new Date(),
+        i = `${e.toLocaleDateString("fr-FR")} ${e.toLocaleTimeString("fr-FR")}`;
+      t.innerHTML += `<p class="text-right"><small>${i}</small></p>`;
     }
   }, 100);
 }
+import dialog from "./answers.js";
+const apiKey = "0a023285b89104b62d53d5e1166678ad",
+  latLon = [50.570559, 2.1551699],
+  url = `https://api.openweathermap.org/data/2.5/weather?lat=${latLon[0]}&lon=${latLon[1]}&appid=${apiKey}&lang=fr&units=metric`,
+  inputDialog = document.getElementById("search"),
+  dataList = document.getElementById("options"),
+  response = document.getElementById("response"),
+  answer = document.getElementById("answer"),
+  getWeather = async () => {
+    const e = await fetch(url),
+      t = await e.json(),
+      n = Math.round(t.main.temp).toString(),
+      i = t.weather[0].description,
+      a = t.main.humidity,
+      s = Math.round(t.wind.speed);
+    return (
+      dialog.push({
+        id: dialog.length + 1,
+        answer: "Quel temps fait-il à Dennlys Parc ?",
+        response: `Il fait actuellment <b>${n}°,</b><br>${i}.<br>Humidité : <b>${a}%</b><br>Vent : <b>${s}km/h</b>`,
+        picture: `http://openweathermap.org/img/wn/${t.weather[0].icon}@2x.png`,
+        keywords: ["météo", "meteo", "temps"],
+      }),
+      t
+    );
+  };
+getWeather();
+const clearDom = () => {
+  (answer.innerHTML = ""),
+    (response.innerHTML = ""),
+    (dataList.innerHTML = ""),
+    response.classList.add("hide"),
+    answer.classList.add("hide");
+};
+inputDialog.addEventListener("input", (e) => {
+  clearDom();
+  const t = e.target.value.toLowerCase().split(" "),
+    n = dialog.filter((e) =>
+      e.keywords.some((e) => t.includes(e.toLowerCase()))
+    );
+  n.length > 0 &&
+    (console.log(`y a ${n.length} proposition.s`),
+    n.forEach((e) => {
+      dataList.innerHTML += `<div><button class="suggestion" data-id="${e.id}"><small>${e.answer}</small></button></div>`;
+      const t = document.querySelectorAll("button");
+      t.forEach((e) => {
+        e.addEventListener("click", function () {
+          const e = Number(this.dataset.id),
+            t = dialog.filter((t) => t.id === e);
+          (dataList.innerHTML = ""),
+            (answer.innerHTML = t[0].answer),
+            typeWriter(t[0].response, response, t);
+        });
+      });
+    }));
+});
